@@ -1,0 +1,58 @@
+{
+  "name": "n8n-nodes-trend-radar",
+  "version": "0.1.0",
+  "description": "n8n community node for discovering and normalising trending topics from Google Trends and YouTube.",
+  "license": "MIT",
+  "homepage": "https://github.com/Spenny24/n8n-nodes-trend-radar#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Spenny24/n8n-nodes-trend-radar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Spenny24/n8n-nodes-trend-radar/issues"
+  },
+  "author": {
+    "name": "Craig Spence",
+    "email": "mrchspence@gmail.com"
+  },
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "trends",
+    "google-trends",
+    "youtube",
+    "content-intelligence"
+  ],
+  "main": "dist/nodes/TrendRadar/TrendRadar.node.js",
+  "scripts": {
+    "build": "n8n-node build",
+    "dev": "n8n-node dev",
+    "lint": "n8n-node lint",
+    "lintfix": "n8n-node lint --fix",
+    "scan": "node scripts/scan-community-package.mjs",
+    "release": "n8n-node release",
+    "test": "vitest run"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/YouTubeApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/TrendRadar/TrendRadar.node.js"
+    ]
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@n8n/node-cli": "^0.43.3",
+    "n8n-workflow": "^2.16.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
