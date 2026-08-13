@@ -12,7 +12,9 @@ function emitFailure(title, details) {
   const cleanDetails = details
     .replace(/npm_[A-Za-z0-9]{20,}/g, '[redacted-npm-token]')
     .replace(/\/\/registry\.npmjs\.org\/:_authToken=.*/g, '//registry.npmjs.org/:_authToken=[redacted]');
-  console.error(`::error title=${title}::${cleanDetails.split('\n').slice(0, 10).join('%0A')}`);
+  const lines = cleanDetails.split('\n');
+  const tail = lines.slice(Math.max(0, lines.length - 18)).join('%0A');
+  console.error(`::error title=${title}::${tail}`);
 }
 
 if (!process.env.NODE_AUTH_TOKEN) {
