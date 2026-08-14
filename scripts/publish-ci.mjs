@@ -30,6 +30,7 @@ function trustedPublishingEnv() {
 
 console.log('Publishing with npm Trusted Publishing / OIDC.');
 console.log('Ignoring token-based npm auth so npm can use the GitHub Actions OIDC identity.');
+console.log(`GitHub Actions OIDC request URL: ${process.env.ACTIONS_ID_TOKEN_REQUEST_URL ? 'present' : 'missing'}.`);
 
 const publish = run('npm', ['publish', '--provenance', '--access', 'public', '--registry', 'https://registry.npmjs.org/'], {
   env: trustedPublishingEnv(),
