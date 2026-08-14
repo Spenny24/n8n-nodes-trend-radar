@@ -17,24 +17,20 @@ function emitFailure(title, details) {
   console.error(`::error title=${title}::${tail}`);
 }
 
-if (!process.env.NODE_AUTH_TOKEN) {
-  emitFailure('Missing npm token', 'NODE_AUTH_TOKEN is empty. Confirm the GitHub Actions secret is named NPM_TOKEN.');
-  process.exit(1);
-}
-
-const whoami = run('npm', ['whoami']);
-if (whoami.status !== 0) {
-  emitFailure('npm authentication failed', `${whoami.stdout}\n${whoami.stderr}`.trim());
-  process.exit(whoami.status || 1);
-}
-
-console.log(`Publishing as npm user: ${whoami.stdout.trim()}`);
+console.log('Publishing with npm Trusted Publishing / OIDC.');
 
 const publish = run('npm', ['publish', '--provenance', '--access', 'public'], {
   stdio: ['ignore', 'inherit', 'pipe'],
 });
 
 if (publish.status !== 0) {
-  emitFailure('npm publish failed', publish.stderr.trim());
+  emitFailure(
+    'npm publish failed',
+    [
+      publish.stderr.trim(),
+      '',
+      'If npm reports an authentication error, confirm the package Trusted Publisher is configured for GitHub Actions, repository Spenny24/n8n-nodes-trend-radar, workflow publish.yml.',
+    ].join('\n'),
+  );
   process.exit(publish.status || 1);
 }
