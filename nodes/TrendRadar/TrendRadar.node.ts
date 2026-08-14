@@ -151,58 +151,46 @@ export class TrendRadar implements INodeType {
     }
 
     if (source === 'youtube' || source === 'both') {
-      const publishedAfter = new Date(Date.now() - publishedWithinHours * 3_600_000).toISOString();
+      const cutoffMs = Date.now() - publishedWithinHours * 3_600_000;
 
       try {
-        const searchResponse = await this.helpers.httpRequestWithAuthentication.call(this, 'youTubeApi', {
+        const videosResponse = await this.helpers.httpRequestWithAuthentication.call(this, 'youTubeApi', {
           method: 'GET',
-          url: 'https://www.googleapis.com/youtube/v3/search',
+          url: 'https://www.googleapis.com/youtube/v3/videos',
           qs: {
-            part: 'snippet',
-            type: 'video',
-            order: 'viewCount',
+            part: 'snippet,statistics',
+            chart: 'mostPopular',
             regionCode: region,
-            publishedAfter,
-            maxResults: Math.min(50, maxResults * 2),
+            maxResults: 50,
           },
           json: true,
-        }) as { items?: Array<{ id?: { videoId?: string }; snippet?: { title?: string; publishedAt?: string } }> };
+        }) as {
+          items?: Array<{
+            id?: string;
+            snippet?: { title?: string; publishedAt?: string };
+            statistics?: { viewCount?: string };
+          }>;
+        };
 
-        const ids = (searchResponse.items ?? [])
-          .map((item) => item.id?.videoId)
-          .filter((id): id is string => Boolean(id));
+        for (const item of videosResponse.items ?? []) {
+          if (!item.id) continue;
 
-        if (ids.length) {
-          const statsResponse = await this.helpers.httpRequestWithAuthentication.call(this, 'youTubeApi', {
-            method: 'GET',
-            url: 'https://www.googleapis.com/youtube/v3/videos',
-            qs: {
-              part: 'snippet,statistics',
-              id: ids.join(','),
-            },
-            json: true,
-          }) as {
-            items?: Array<{
-              id?: string;
-              snippet?: { title?: string; publishedAt?: string };
-              statistics?: { viewCount?: string };
-            }>;
-          };
+          const publishedAt = item.snippet?.publishedAt;
+          const publishedMs = publishedAt ? Date.parse(publishedAt) : Number.NaN;
+          if (!Number.isFinite(publishedMs) || publishedMs < cutoffMs) continue;
 
-          for (const item of statsResponse.items ?? []) {
-            const views = Number(item.statistics?.viewCount ?? 0);
-            if (views < minimumViews || !item.id) continue;
-            const publishedAt = item.snippet?.publishedAt;
-            trends.push({
-              title: item.snippet?.title ?? item.id,
-              source: 'youtube',
-              url: `https://www.youtube.com/watch?v=${item.id}`,
-              publishedAt,
-              views,
-              region,
-              trendScore: calculateTrendScore({ views, publishedAt }),
-            });
-          }
+          const views = Number(item.statistics?.viewCount ?? 0);
+          if (views < minimumViews) continue;
+
+          trends.push({
+            title: item.snippet?.title ?? item.id,
+            source: 'youtube',
+            url: `https://www.youtube.com/watch?v=${item.id}`,
+            publishedAt,
+            views,
+            region,
+            trendScore: calculateTrendScore({ views, publishedAt }),
+          });
         }
       } catch (error) {
         throw new NodeApiError(this.getNode(), error as JsonObject);
