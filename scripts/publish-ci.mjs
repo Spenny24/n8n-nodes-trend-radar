@@ -17,9 +17,22 @@ function emitFailure(title, details) {
   console.error(`::error title=${title}::${tail}`);
 }
 
-console.log('Publishing with npm Trusted Publishing / OIDC.');
+function trustedPublishingEnv() {
+  const env = { ...process.env };
 
-const publish = run('npm', ['publish', '--provenance', '--access', 'public'], {
+  delete env.NODE_AUTH_TOKEN;
+  delete env.NPM_TOKEN;
+  delete env.NPM_CONFIG_USERCONFIG;
+  delete env.npm_config_userconfig;
+
+  return env;
+}
+
+console.log('Publishing with npm Trusted Publishing / OIDC.');
+console.log('Ignoring token-based npm auth so npm can use the GitHub Actions OIDC identity.');
+
+const publish = run('npm', ['publish', '--provenance', '--access', 'public', '--registry', 'https://registry.npmjs.org/'], {
+  env: trustedPublishingEnv(),
   stdio: ['ignore', 'inherit', 'pipe'],
 });
 
